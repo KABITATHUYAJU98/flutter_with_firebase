@@ -48,7 +48,7 @@ android {
         applicationId "com.example.flutter_with_firebase"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion 19
+        minSdkVersion 29
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -67,10 +67,13 @@ flutter {
     source '../..'
 }
 
+// // START: FlutterFire Configuration
+apply plugin: 'com.google.gms.google-services'
+
 dependencies {
+    
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation platform('com.google.firebase:firebase-bom:32.5.0')
+    implementation 'com.google.firebase:firebase-analytics'
 }
 
-
-// START: FlutterFire Configuration
-apply plugin: 'com.google.gms.google-services'
