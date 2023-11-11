@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_with_firebase/screens/wrapper.dart';
+import 'package:flutter_with_firebase/screens/home_screen.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       //home prop is gonna be wrapper
-      home: Wrapper(),
+      home: HomeScreen(),
     );
   }
 }
