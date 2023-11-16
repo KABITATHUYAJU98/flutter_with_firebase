@@ -43,27 +43,27 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text('Verify OTP'),
+        title: const Text('Verify OTP'),
       ),
       body: SafeArea(
           child: ListView(
         children: [
           Padding(
-            padding: EdgeInsets.all(15),
+            padding: const EdgeInsets.all(15),
             child: Column(children: [
               TextField(
                 controller: otpController,
                 maxLength: 6,
-                decoration: InputDecoration(labelText: "6-Digit OTP"),
+                decoration: const InputDecoration(labelText: "6-Digit OTP"),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 15,
               ),
               ElevatedButton(
                   onPressed: () {
                     verifyOTP();
                   },
-                  child: Text('Verify'))
+                  child: const Text('Verify'))
             ]),
           )
         ],
