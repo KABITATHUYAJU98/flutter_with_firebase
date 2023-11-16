@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   TextEditingController nameCont = TextEditingController();
   TextEditingController emailCont = TextEditingController();
+  TextEditingController ageCont = TextEditingController();
 
   void logout() async {
     await FirebaseAuth.instance.signOut();
@@ -30,14 +31,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void saveUser() {
     String name = nameCont.text.trim();
     String email = emailCont.text.trim();
+    String ageString = ageCont.text.trim();
+
+    int age = int.parse(ageString);
 
     nameCont.clear();
     emailCont.clear();
+    ageCont.clear();
 
-    if (name != "" && email != "") {
+    if (name != "" && email != "" && age != "") {
       //if not empty - map the data and store it in firestore
 
-      Map<String, dynamic> userData = {"name": name, "email": email};
+      Map<String, dynamic> userData = {
+        "name": name,
+        "email": email,
+        "age": age
+      };
 
       FirebaseFirestore.instance.collection("users").add(userData);
     } else {
@@ -78,6 +87,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(
               height: 10,
             ),
+            TextField(
+              controller: ageCont,
+              decoration: InputDecoration(hintText: "Age"),
+            ),
+            const SizedBox(height: 10),
             ElevatedButton(
                 child: const Text("Save"),
                 onPressed: () {
@@ -87,8 +101,11 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 20,
             ),
             StreamBuilder<QuerySnapshot>(
-              stream:
-                  FirebaseFirestore.instance.collection("users").snapshots(),
+              stream: FirebaseFirestore.instance
+                  .collection("users")
+                  .where("age", isGreaterThan: 1)
+                  .orderBy("age", descending: true)
+                  .snapshots(),
               builder: (context, snapshot) {
                 //it comes form  .snapshots
                 //.get() - we get query snapshot but from .snapshots() - it gives real time data
@@ -108,7 +125,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   as Map<String, dynamic>;
 
                           return ListTile(
-                            title: Text(userMap["name"]),
+                            title:
+                                Text(userMap["name"] + "(${userMap["age"]})"),
                             subtitle: Text(userMap["email"]),
                             trailing: IconButton(
                               icon: Icon(Icons.delete),
