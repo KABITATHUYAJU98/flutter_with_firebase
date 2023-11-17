@@ -13,6 +13,12 @@ class NotificationService {
         await FirebaseMessaging.instance.requestPermission();
     //we can check that the settings is authorized or not
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      String? token = await FirebaseMessaging.instance
+          .getToken(); //token has benn came but we have to check
+      if (token != null) {
+        log(token);
+      }
+
       FirebaseMessaging.onBackgroundMessage(backgroundHandler);
 
       log("Notifications are Initialized!!");

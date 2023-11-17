@@ -9,6 +9,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_with_firebase/screens/email_auth/login_screen.dart';
+import 'package:flutter_with_firebase/screens/email_auth/signup_screen.dart';
 import 'package:flutter_with_firebase/screens/phone_auth/signin_with_phone.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -91,6 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
+    getInitialMessage();
+
     FirebaseMessaging.onMessage.listen((message) {
       //after receiving message.show snackbar
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -102,6 +105,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
       log("message received! ${message.notification!.title}");
     });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("App was opened by a notification"),
+        duration: Duration(seconds: 10),
+        backgroundColor: Colors.green,
+      ));
+    });
+  }
+
+  void getInitialMessage() async {
+    RemoteMessage? message =
+        await FirebaseMessaging.instance.getInitialMessage();
+
+    if (message != null) {
+      if (message.data["page"] == "email") {
+        Navigator.push(
+            context, CupertinoPageRoute(builder: (context) => SignupScreen()));
+      } else if (message.data["page"] == "phone") {
+        Navigator.push(context,
+            CupertinoPageRoute(builder: (context) => SigninWithPhoneScreen()));
+      } else {}
+    }
   }
 
   @override
