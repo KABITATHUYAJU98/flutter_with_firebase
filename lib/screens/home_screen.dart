@@ -1,11 +1,17 @@
+import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_with_firebase/screens/email_auth/login_screen.dart';
 import 'package:flutter_with_firebase/screens/phone_auth/signin_with_phone.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   TextEditingController nameCont = TextEditingController();
   TextEditingController emailCont = TextEditingController();
   TextEditingController ageCont = TextEditingController();
+  File? profilePicture;
 
   void logout() async {
     await FirebaseAuth.instance.signOut();
@@ -28,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
         CupertinoPageRoute(builder: (context) => SigninWithPhoneScreen()));
   }
 
-  void saveUser() {
+  void saveUser() async {
     String name = nameCont.text.trim();
     String email = emailCont.text.trim();
     String ageString = ageCont.text.trim();
@@ -39,19 +46,62 @@ class _HomeScreenState extends State<HomeScreen> {
     emailCont.clear();
     ageCont.clear();
 
-    if (name != "" && email != "" && age != "") {
+    if (name != "" && email != "" && profilePicture != null) {
       //if not empty - map the data and store it in firestore
+
+      //uploading profile pic - select instance of storage
+      UploadTask uploadTask = FirebaseStorage.instance
+          .ref()
+          .child("profilePictures")
+          .child(Uuid().v1())
+          .putFile(profilePicture!);
+
+      StreamSubscription taskSubscription =
+          uploadTask.snapshotEvents.listen((snapshot) {
+        double percentage =
+            snapshot.bytesTransferred / snapshot.totalBytes * 100;
+        log(percentage.toString());
+      });
+
+      TaskSnapshot taskSnapShot = await uploadTask;
+      //after finishing this uploadTask we get task snapshot
+      String downloadUrl = await taskSnapShot.ref
+          .getDownloadURL(); //future string so need of await
+
+      //download url milesi task subscription lai..cancel gardinxam
 
       Map<String, dynamic> userData = {
         "name": name,
         "email": email,
-        "age": age
+        "age": age,
+        "profilepicture": downloadUrl,
       };
 
       FirebaseFirestore.instance.collection("users").add(userData);
     } else {
       log("Please fill all the fields");
     }
+
+    setState(() {
+      profilePicture = null;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    FirebaseMessaging.onMessage.listen((message) {
+      //after receiving message.show snackbar
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        // content: Text(message.notification!.body.toString()),
+        content: Text(message.data["myname"].toString()),
+        duration: const Duration(seconds: 10),
+        backgroundColor: Colors.green,
+      ));
+
+      log("message received! ${message.notification!.title}");
+    });
   }
 
   @override
@@ -73,6 +123,31 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(12.0),
         child: Column(
           children: [
+            CupertinoButton(
+              onPressed: () async {
+                //while tapping - opens file browser - helps to browse image
+                XFile? selectedImage =
+                    await ImagePicker().pickImage(source: ImageSource.gallery);
+
+                if (selectedImage != null) {
+                  File convertedFile = File(selectedImage.path);
+                  // while selecting file then..it will equal to profilePicture
+                  setState(() {
+                    profilePicture = convertedFile;
+                  });
+                  log("Image is Selected!!");
+                } else {
+                  log("Image is not Selected!!");
+                }
+              },
+              child: CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.grey,
+                backgroundImage: (profilePicture != null
+                    ? FileImage(profilePicture!)
+                    : null),
+              ),
+            ),
             TextField(
               controller: nameCont,
               decoration: InputDecoration(hintText: "Name"),
@@ -125,6 +200,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   as Map<String, dynamic>;
 
                           return ListTile(
+                            leading: CircleAvatar(
+                                // fetching from firebase storage
+                                backgroundImage:
+                                    NetworkImage(userMap["profilepicture"])),
                             title:
                                 Text(userMap["name"] + "(${userMap["age"]})"),
                             subtitle: Text(userMap["email"]),
@@ -140,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   } else {
                     //show error message
-                    return Text("No Data!!");
+                    return const Text("No Data!!");
                   }
                 } else {
                   return Center(

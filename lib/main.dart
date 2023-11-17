@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 // import 'package:flutter_with_firebase/screens/email_auth/login_screen.dart';
 import 'package:flutter_with_firebase/screens/phone_auth/signin_with_phone.dart';
+import 'package:flutter_with_firebase/services/notification_service.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_with_firebase/screens/home_screen.dart';
@@ -14,6 +15,8 @@ void main() async {
   WidgetsFlutterBinding
       .ensureInitialized(); // initialization of flutter app related configurations
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await NotificationService.initialize();
 
   // /** Fetching Data **/
   // // QuerySnapshot snapshot =
